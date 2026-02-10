@@ -1,0 +1,10 @@
+TEX0/
+TEX1/
+SCREENS/
+extract/
+.venv/
+__pycache__/
+.vscode/
+gzip
+*.z64
+*.zip
