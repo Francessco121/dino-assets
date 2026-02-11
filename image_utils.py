@@ -1,72 +1,19 @@
 from pathlib import Path
 import struct
 
-def deinterleave(image: bytes, width: int, height: int, byte_depth: int) -> bytearray:
+def deinterleave(image: bytes, width: int, height: int, bpp: int, stride: int) -> bytearray:
     deinterleaved = bytearray(len(image))
+    width_nbytes = int(width * (bpp / 8))
     for y in range(height):
-        b = y * (width * byte_depth)
+        row_offset = y * width_nbytes
         if y % 2 == 0:
-            for i in range(b, b + (width * byte_depth)):
-                deinterleaved[i] = image[i]
+            for i in range(width_nbytes):
+                deinterleaved[row_offset + i] = image[row_offset + i]
         else:
-            for i in range(b, b + (width * byte_depth), 8):
-                deinterleaved[i + 0] = image[i + 4]
-                deinterleaved[i + 1] = image[i + 5]
-                deinterleaved[i + 2] = image[i + 6]
-                deinterleaved[i + 3] = image[i + 7]
-                deinterleaved[i + 4] = image[i + 0]
-                deinterleaved[i + 5] = image[i + 1]
-                deinterleaved[i + 6] = image[i + 2]
-                deinterleaved[i + 7] = image[i + 3]
-    
-    return deinterleaved
-
-def deinterleave_4(image: bytes, width: int, height: int) -> bytearray:
-    deinterleaved = bytearray(len(image))
-    for y in range(height):
-        b = y * (width // 2)
-        if y % 2 == 0:
-            for i in range(b, b + (width // 2)):
-                deinterleaved[i] = image[i]
-        else:
-            for i in range(b, b + (width // 2), 8):
-                deinterleaved[i + 0] = image[i + 4]
-                deinterleaved[i + 1] = image[i + 5]
-                deinterleaved[i + 2] = image[i + 6]
-                deinterleaved[i + 3] = image[i + 7]
-                deinterleaved[i + 4] = image[i + 0]
-                deinterleaved[i + 5] = image[i + 1]
-                deinterleaved[i + 6] = image[i + 2]
-                deinterleaved[i + 7] = image[i + 3]
-    
-    return deinterleaved
-
-def deinterleave_32(image: bytes, width: int, height: int) -> bytearray:
-    deinterleaved = bytearray(len(image))
-    for y in range(height):
-        b = y * (width * 4)
-        if y % 2 == 0:
-            for i in range(b, b + (width * 4)):
-                deinterleaved[i] = image[i]
-        else:
-            for i in range(b, b + (width * 4), 16):
-                deinterleaved[i + 0] = image[i + 8]
-                deinterleaved[i + 1] = image[i + 9]
-                deinterleaved[i + 2] = image[i + 10]
-                deinterleaved[i + 3] = image[i + 11]
-                deinterleaved[i + 4] = image[i + 12]
-                deinterleaved[i + 5] = image[i + 13]
-                deinterleaved[i + 6] = image[i + 14]
-                deinterleaved[i + 7] = image[i + 15]
-
-                deinterleaved[i + 8] = image[i + 0]
-                deinterleaved[i + 9] = image[i + 1]
-                deinterleaved[i + 10] = image[i + 2]
-                deinterleaved[i + 11] = image[i + 3]
-                deinterleaved[i + 12] = image[i + 4]
-                deinterleaved[i + 13] = image[i + 5]
-                deinterleaved[i + 14] = image[i + 6]
-                deinterleaved[i + 15] = image[i + 7]
+            half_stride = stride // 2
+            for i in range(0, width_nbytes, stride):
+                for k in range(stride):
+                    deinterleaved[row_offset + i + k] = image[row_offset + i + ((k + half_stride) % stride)]
     
     return deinterleaved
 

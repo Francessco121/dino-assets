@@ -2,15 +2,12 @@
 from __future__ import annotations
 import argparse
 from pathlib import Path
-import subprocess
-from typing import TypedDict
-import zlib
 
 from assetlib.fs import *
-from image_utils import *
+from image_utils import deinterleave, rgba5551_to_bgra8888, write_targa
 
 def write_file(path: Path, rgba5551_image: bytes, width: int, height: int):
-    rgba5551_image = deinterleave(rgba5551_image, width, height, 2)
+    rgba5551_image = deinterleave(rgba5551_image, width, height, bpp=16, stride=8)
     bgra8888_image = rgba5551_to_bgra8888(rgba5551_image)
 
     # Force full opacity, screens have 0 alpha but are rendered without alpha compare

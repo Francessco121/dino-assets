@@ -9,7 +9,7 @@ import subprocess
 from typing import TypedDict
 import zlib
 
-from image_utils import deinterleave, deinterleave_32, deinterleave_4, vflip_bgra8888, write_targa
+from image_utils import deinterleave, vflip_bgra8888, write_targa
 
 class TexTabEntry(TypedDict):
     offset: int
@@ -137,7 +137,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
 
     if fmt == 0:
         # RGBA32
-        image_data = deinterleave_32(image_data, width, height)
+        image_data = deinterleave(image_data, width, height, bpp=32, stride=16)
         for i in range(0, width * height * 4, 4):
             bgra8888_image[i + 0] = image_data[i + 2]
             bgra8888_image[i + 1] = image_data[i + 1]
@@ -145,7 +145,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             bgra8888_image[i + 3] = image_data[i + 3]
     elif fmt == 1:
         # RGBA16
-        image_data = deinterleave(image_data, width, height, 2)
+        image_data = deinterleave(image_data, width, height, bpp=16, stride=8)
         k = 0
         for i in range(0, width * height * 2, 2):
             pixel = struct.unpack_from(">H", image_data, i)[0]
@@ -165,7 +165,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             k += 4
     elif fmt == 2:
         # I8
-        image_data = deinterleave(image_data, width, height, 1)
+        image_data = deinterleave(image_data, width, height, bpp=8, stride=8)
         for i in range(width * height):
             intensity = image_data[i]
 
@@ -175,7 +175,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             bgra8888_image[(i * 4) + 3] = 255
     elif fmt == 3:
         # I4
-        image_data = deinterleave_4(image_data, width, height)
+        image_data = deinterleave(image_data, width, height, bpp=4, stride=8)
         k = 0
         for i in range((width * height) // 2):
             intensity1 = (image_data[i] & 0xF0) >> 4
@@ -194,7 +194,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             k += 4
     elif fmt == 4:
         # IA16
-        image_data = deinterleave(image_data, width, height, 2)
+        image_data = deinterleave(image_data, width, height, bpp=16, stride=8)
         k = 0
         for i in range(0, width * height * 2, 2):
             intensity = image_data[i + 0]
@@ -207,7 +207,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             k += 4
     elif fmt == 5:
         # IA8
-        image_data = deinterleave(image_data, width, height, 1)
+        image_data = deinterleave(image_data, width, height, bpp=8, stride=8)
         for i in range(width * height):
             byte = image_data[i]
             intensity = ((byte >> 4) & 0xF) * 17
@@ -219,7 +219,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
             bgra8888_image[(i * 4) + 3] = alpha
     elif fmt == 6:
         # IA4
-        image_data = deinterleave_4(image_data, width, height)
+        image_data = deinterleave(image_data, width, height, bpp=4, stride=8)
         k = 0
         for i in range((width * height) // 2):
             nybble1 = (image_data[i] & 0xF0) >> 4
@@ -244,7 +244,7 @@ def write_mip(path: Path, image_data: bytes, palette: bytes | None, fmt: int, fm
     elif fmt == 7:
         # CI4
         assert palette != None
-        image_data = deinterleave_4(image_data, width, height)
+        image_data = deinterleave(image_data, width, height, bpp=4, stride=8)
         k = 0
         for i in range((width * height) // 2):
             idx1 = (image_data[i] & 0xF0) >> 4
