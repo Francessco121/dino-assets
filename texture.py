@@ -24,8 +24,8 @@ class Texture(TypedDict):
     width: int # Lower 8-bits of width
     height: int # Lower 8-bits of height
     format: int # Upper nybble = alpha format, lower nybble = pixel format
-    unk3: int # spriteX?
-    unk4: int # spriteY?
+    sprite_x: int
+    sprite_y: int
     ref_count: int # Must be 1 in ROM
     flags: int
     gdl: int # Zero in ROM, set at runtime
@@ -34,7 +34,7 @@ class Texture(TypedDict):
     unk10: int # Unused, zero in ROM
     gdl2_offset: int # Zero in ROM, set at runtime
     next: int # Zero in ROM, set at runtime
-    unk18: int
+    size_bytes: int
     unk1A: int
     width_height_hi: int # Upper nybble = upper 4-bits of width, lower nybble = lower 4-bits of height
     cms: int # S-coord clamp, mirror, wrap
@@ -43,17 +43,17 @@ class Texture(TypedDict):
     maskt: int # T-coord wrap mask
 
 def parse_texture(data: bytes) -> Texture:
-    width, height, fmt, unk3, unk4, ref_count = struct.unpack_from(">BBBBBB", data, 0)
+    width, height, fmt, sprite_x, sprite_y, ref_count = struct.unpack_from(">BBBbbB", data, 0)
     flags, gdl, anim_duration, anim_speed = struct.unpack_from(">hIHH", data, 0x6)
-    unk10, gdl2_offset, next, unk18, unk1A = struct.unpack_from(">HhIhB", data, 0x10)
+    unk10, gdl2_offset, next, size_bytes, unk1A = struct.unpack_from(">HhIhB", data, 0x10)
     width_height_hi, cms, masks, cmt, maskt = struct.unpack_from(">BBBBB", data, 0x1B)
 
     return {
         "width": width,
         "height": height,
         "format": fmt,
-        "unk3": unk3,
-        "unk4": unk4,
+        "sprite_x": sprite_x,
+        "sprite_y": sprite_y,
         "ref_count": ref_count,
         "flags": flags,
         "gdl": gdl,
@@ -62,7 +62,7 @@ def parse_texture(data: bytes) -> Texture:
         "unk10": unk10,
         "gdl2_offset": gdl2_offset,
         "next": next,
-        "unk18": unk18,
+        "size_bytes": size_bytes,
         "unk1A": unk1A,
         "width_height_hi": width_height_hi,
         "cms": cms,
@@ -361,12 +361,12 @@ def dump(dir: Path, tab: list[TexTabEntry], idx: int, bin: BufferedReader, tex1:
             json_data = {
                 "format1": fmt,
                 "format2": fmt2,
-                "unk3": tex["unk3"],
-                "unk4": tex["unk4"],
+                "sprite_x": tex["sprite_x"],
+                "sprite_y": tex["sprite_y"],
                 "flags": tex["flags"],
                 "anim_duration": tex["anim_duration"],
                 "anim_speed": tex["anim_speed"],
-                "unk18": tex["unk18"],
+                "size_bytes": tex["size_bytes"],
                 "unk1A": tex["unk1A"],
                 "cms": tex["cms"],
                 "masks": tex["masks"],
